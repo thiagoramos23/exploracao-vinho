@@ -1,0 +1,382 @@
+---
+Nome: Thiago de Lima Viana Ramos
+Email: thiagoramos.al@gmail.com
+---
+Analise de Qualidade de Vinhos Tintos
+========================================================
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+library(ggplot2)
+library(GGally)
+library(scales)
+library(lattice)
+library(MASS)
+library(gridExtra)
+library(dplyr)
+library(reshape)
+```
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+redwine <- read.csv('qualidadeVinhoTinto.csv')
+```
+
+## Introdução ao Dataset
+Este dataset possui 1599 observações sobre a qualidade de vinho tinto divididas em 13 variáveis. Como mostrado abaixo:
+
+```{r}
+str(redwine)
+```
+
+## Sumário inicial e nome das variáveis
+Abaixo segue os nomes das variáveis e um sumário geral do dataset:
+
+```{r}
+names(redwine)
+```
+
+```{r}
+summary(redwine)
+```
+
+# Gráficos de Uma Variável
+
+Uma das variáveis mais importantes aqui é a qualidade do vinho:
+```{r echo=FALSE, plot1-qualidade-vinho}
+ggplot(aes(x = quality), data = redwine) +
+  geom_histogram(fill="#F74290", stat='count', binwidth = 1) +
+  labs(x='Qualidade do Vinho', y='Count') 
+```
+
+
+```{r echo=FALSE, plot-fixed-acidity}
+ggplot(aes(x = fixed.acidity), data = redwine)+
+  geom_histogram(colour="#000000", fill="#F74290",binwidth = 0.5) +
+  ggtitle("Acidez Fixa") +
+  labs(x = 'Acidez Fixa')
+```
+
+Aqui podemos ver que os vinhos neste dataset possuem em média 7g / dm^3 e temos poucos outliers. 
+
+```{r echo=FALSE, plot-volatile-acidity}
+ ggplot(aes(x = volatile.acidity), data = redwine)+
+  geom_histogram(colour="#000000", fill="#F74290",binwidth = 0.10) +
+  ggtitle("Acidez Volátil") +
+  labs(x = "Acidez Volátil")
+```
+
+A média de acidez volátil é de 0.5g / dm^3 o que mostra que a grande maioria dos vinhos neste dataset não são tão ácidos. 
+A volatilidade acética indica a quantidade de ácido acético no vinho que é responsável pelo sabor de vinagre quando muito alta.
+
+```{r echo=FALSE, acidez-citrica}
+ggplot(aes(x = citric.acid), data = redwine)+
+  geom_histogram(colour="#000000", fill="#F74290", binwidth = 0.05) +
+  ggtitle("Acidez Cítrica") +
+  labs(x = 'Acidez Cítrica')
+```
+```{r}
+summary(redwine$citric.acid)
+```
+
+Este gráfico mostra que existe uma grande quantidade de vinhos com pouco o quase nada de ácido cítrico. Mas podemos dizer que a média está em 0.26g / dm^3. 
+A acidez cítrica é reponsável pela sensação de frescor e sabor ao vinho.
+
+```{r echo=FALSE, plot-residual-sugar}
+ggplot(aes(x = residual.sugar), data = redwine)+
+  geom_histogram(colour="#000000", fill="#F74290",binwidth = 0.2) +
+  ggtitle("Açucar Residual") +
+  labs(x = 'Açucar Residual')
+```
+
+Açúcar Residual é a quantidade de açúcar que sobra depois da fermentação. Este é gráfico é fortemente enviesado com uma cauda longa e alguns outliers. 
+
+Mas o quão distante e quantos seriam esses outliers?
+É mais fácil ver no gráfico abaixo.
+
+```{r echo=FALSE, acucar-residual}
+boxplot(redwine$residual.sugar, horizontal = T, frame.plot = FALSE,
+        main='Residual Sugar', pch=21, cex = .4)
+```
+
+```{r echo=FALSE, plot-chlorides}
+ggplot(aes(x = chlorides), data = redwine) +
+  geom_histogram(colour="#000000", fill="#F74290", binwidth = 0.02) +
+  ggtitle("Cloreto de Sódio")
+```
+
+Cloreto de sódio é a quantidade de sódio no vinho. A distribuição é enviesado e existem alguns outliers. Geralmente vinhos bons possuem pouco sódio.
+
+```{r echo=False}
+summary(redwine$chlorides)
+```
+
+Como pode ser visto a média é 0.07 g /dm^3. Mas existem alguns outliers the tornam a quantidade máxima em 0.6 g /dm^3.
+
+```{r echo=FALSE, plot-dioxido-enxofre}
+ggplot(aes(x = free.sulfur.dioxide), data = redwine)+
+  geom_histogram(colour="#000000", fill="#F74290",binwidth = 4) +
+  ggtitle("Dióxido de Enxofre livre") +
+  labs(x = 'Dióxido de Enxofre livre')
+```
+
+Este gráfico é enviesado positivamente o que demonstra que a maioria dos vinhos possuem pouco dióxido de enxofre. Este composto existe em equilíbrio com moléculas SO2 e íons de Bisulfito. Ele previne o crescimento de micróbios e a oxidação do vinho.
+
+```{r echo=FALSE}
+summary(redwine$free.sulfur.dioxide)
+```
+
+A média de dióxido de enxofre livre é de 15.87 mg / dm^3 mas existem alguns outliers que fazem a máxima chegar à 72 mg / dm^3.
+
+```{r echo=FALSE, plot-total-dioxido-enxofre}
+ggplot(aes(x = total.sulfur.dioxide), data = redwine)+
+  geom_histogram(colour="#000000", fill="#F74290",binwidth = 10) +
+  ggtitle("Total de Dióxido de Enxofre") +
+  labs(x = 'Total de Dióxido de Enxofre')
+```
+
+Aqui temos um gráfico fortemente enviesado positivamente, bem similar ao anterior. O Total de dióxido de enxofre é a soma do dióxido de enxofre livre e o dióxido de enxofre ligado. Existem dois outliers neste dataset.
+
+```{r echo=FALSE, box-plor-total-sulfur}
+boxplot(redwine$total.sulfur.dioxide, horizontal = T, frame.plot = FALSE,
+        main='Total de Dióxide de Enxofre', pch=21, cex = .4)
+```
+
+```{r echo=FALSE, plot-densidade}
+ggplot(aes(x = density), data = redwine)+
+  geom_histogram(colour="#000000", fill="#F74290",binwidth = 0.001) +
+  ggtitle("Densidade") +
+  xlab('Densidade (g/cm^3)')
+```
+
+A densidade da água no vinho segue uma distribuição normal. É uma das poucas features que seguem uma distribuição nesse tipo.
+
+```{r echo=FALSE, plot-ph}
+ggplot(aes(x = pH), data = redwine)+
+  geom_histogram(colour="#000000", fill="#F74290",binwidth = 0.05) +
+  ggtitle("pH") +
+  xlab('pH')
+```
+
+Aqui temos o pH. O pH descreve o quão ácido o vinho é numa escala de 0 à 14. Sendo 0 muito ácido e 14 muito básico (o inverso de muito ácido). Esse gráfico mostra que a acidez acompanha uma distribuição normal tendo a grande maioria dos vinhos uma média 3.3 de acidez. Como mostra o sumário abaixo.
+
+```{r echo=False}
+summary(redwine$pH)
+```
+
+```{r echo=FALSE, plot-sulfatos}
+ggplot(aes(x = sulphates), data = redwine)+
+  geom_histogram(colour="#000000", fill="#F74290",binwidth = 0.1) +
+  ggtitle("Sulfatos") +
+  xlab('Sulfatos (g/dm^3)')
+```
+
+Sulfatos agem como anti-microbacterianos e antioxidantes. Este gráfico revela que a grande maioria dos vinhos possui algo entre 0.5 e 0.8 g / dm^3. O gráfico positivamente enviesado. E temos também alguns outliers como mostra o gráfico abaixo.
+
+```{r echo=FALSE, box-plot-sulfatos}
+boxplot(redwine$sulphates, horizontal = T, frame.plot = FALSE,
+        main='Sulfatos', pch=21, cex = .6)
+```
+
+
+```{r echo=FALSE, plot-alcool}
+ggplot(aes(x = alcohol), data = redwine)+
+  geom_histogram(colour="#000000", fill="#F74290",binwidth = 0.5) +
+  ggtitle("Alcohol") +
+  xlab('Alcohol (%)')
+```
+
+Mais um gráfico positivamente enviesado, mostrando que existem mais vinhos com uma baixa dose de alcool do que o contrário. A média é: 10.2%
+
+```{r echo=FALSE}
+summary(redwine$alcohol)
+```
+
+
+### Sobre o dataset
+Existem 1599 observações e 13 variáveis
+The dataset has 1599 observations and 13 variables.
+Interessante que fora pH e densidade que tem uma distribuição normal, as outras variáveis possuem um gráfico enviesado positivamente.
+
+### Feature que são interessantes
+O pH, a acidez volátil e fixa, o álcool, a densidate e os sulfatos parecem ser bem interessantes e merecem uma exploração melhor.
+
+
+# Plots com duas variáveis e algumas análises
+
+Será que o PH influencia na qualidade dos vinnhos?
+
+```{r echo=FALSE, plot-bivariate-[alcool-ph-qualidate}
+ggplot(aes(factor(quality), pH),data=redwine)+
+  geom_jitter(alpha=0.1)+
+  ggtitle("PH & Qualidade")+
+  geom_boxplot( alpha = .5,color = '#1f77b4')+
+  stat_summary(fun.y = "mean", 
+      geom = "point", 
+      color = "red", 
+      shape = 21, 
+      size = 5)+
+  xlab('Qualidade')+
+  ylab('PH')
+```
+
+O pH descreve o quão ácido o vinho é. Aqui podemos ver que não existe uma boa correlação entre essas variáveis já que existem vinhos com qualidade 6 com pH alto e com pH baixo. Essa variável está logo descartada.
+
+O álcool é muito importante na composição dos vinhos, mas quanto ele importa com relação à qualidade?
+```{r echo=FALSE, plot-bivariate-alcool-qualidate}
+ggplot(aes(factor(quality), alcohol),data=redwine)+
+  geom_jitter(alpha=0.1)+
+  ggtitle("Álcool & Qualidade")+
+  geom_boxplot( alpha = .5,color = '#1f77b4')+
+  stat_summary(fun.y = "mean", 
+      geom = "point", 
+      color = "red", 
+      shape = 21, 
+      size = 3)+
+  xlab('Qualidade')+
+  ylab('Álcool (%)')+
+  theme(panel.background = element_blank())
+```
+
+É muito interessante notar aqui que a partir da qualidade 5, ou seja, partindo dos vinhos medianos em diantes a qualidade está bem relacionada a quantidade de algo. A correlação não é forte já que a grande maioria dos vinhos fica na média de 5 ou 6 mas podemos ver que quanto maior a qualidade do vinho, maior é a quantidade de álcool.
+
+E a ácidez, será que interfere na qualidade? Será que vinhos bons são mais ou menos
+ácidos?
+```{r echo=FALSE, acidez-volatil-qualidade}
+ggplot(aes(factor(quality), volatile.acidity),data=redwine)+
+ geom_jitter(alpha=0.1)+
+ ggtitle("Acidez Volátil & Qualidade")+
+ geom_jitter( alpha = .5,color = '#1f77b4')+
+  stat_summary(fun.y = "mean", 
+      geom = "point", 
+      color = "red", 
+      shape = 21, 
+      size = 3)+
+ xlab('Qualidade')+
+ ylab('Acidez Volátil (g/dm^3)')
+```
+
+Interessante notar que quanto menor a quantidade de ácidez, melhor o vinho. De acordo com uma pesquisa feitas em sites especializados em vinho, a volatilidade da acidez é o que faz um bom vinho. A quantidade correta de acidez deixa o vinho mais fresco, dá forma e sabor, enfim, é a alma do vinho. Um vinho bom tem a quantidade certa de acidez e isso pode ser visto através do gráfico acima. Apararentemente uma média de 0.4g/dm^3 é o ideal, e os melhores vinhos parecem estar entre 0.3 e 0.5g/dm^3
+
+```{r echo=FALSE, acidez-volatil-qualidade}
+ggplot(aes(factor(quality), fixed.acidity),data=redwine)+
+ geom_jitter(alpha=0.1)+
+ ggtitle("Acidez Fixa & Qualidade")+
+ geom_jitter( alpha = .5,color = '#1f77b4')+
+  stat_summary(fun.y = "mean", 
+      geom = "point", 
+      color = "red", 
+      shape = 21, 
+      size = 3)+
+ xlab('Qualidade')+
+ ylab('Acidez Fixa (g/dm^3)')
+```
+
+
+```{r echo=FALSE, densidade-alcool}
+ggplot(aes(x=alcohol,y=density),data=redwine)+
+  geom_point(color='#1F77B4', alpha=0.2) +
+  ggtitle("Álcool & Densidade")+
+  xlab('Álcool (%)')+
+  ylab('Densidade (g/cm^3)')
+```
+
+Aqui eu quis entender se a densidade de água continha alguma correlação com o álcool. Vemos pelo gráfico que quanto mais água, menos a porcentagem de álcool.
+
+
+# Secção de Gráficos Multi variáveis
+
+
+```{r echo=FALSE, multivariate_Plots-Plot21}
+ggplot(aes(x=density,y=alcohol),data=redwine)+
+  geom_point(aes(color=fixed.acidity), alpha=0.9) +
+  scale_colour_gradient(name = "Acidez", 
+                    low = "red", high = "blue") +
+  ggtitle("Álcool - Densidade - Acidez")+
+  xlab('Densidade (g/cm^3)')+
+  ylab('Álcool (%)')
+```
+
+Nós vimos antes que quando maior o álcool, menor a densidade. E neste gráfico nós conseguimos notar que quanto mais denso maior a ácidez .
+
+
+```{r echo=FALSE, multivariate_Plots-Plot23}
+ggplot(aes(x=alcohol,y=density, color=factor(quality)),data=redwine)+
+  geom_point(alpha=0.6) +
+  ggtitle("Álcool X Densidate X Qualidade")+
+  xlab('Álcool (%)')+
+  ylab('Densidade (g/cm^3)')+
+  geom_smooth(method = "lm", se = FALSE,size=0.8)  +
+  scale_color_brewer(type='seq',
+                   guide=guide_legend(title='Qualidade'))
+```
+                    
+O que realmente interessa para nós? Até agora estamos buscando entender quais fatores são mais importantes para a qualidade do vinho. 
+
+Neste gráfico conseguimos entender que vinhos bons, geralmente possuem uma baixa densidade de água e um teor alcoólico maior. O que podemos perceber nesse gráfico é que 
+a inclinação das retas para vinhos de baixa qualidade é menos íngreme e tendem para a esquerda enquanto vinhos de maior qualidade tem uma reta mais íngreme e tendem mais para a direita.
+
+------
+
+# Sumário
+
+### Gráfico 1
+```{r echo=FALSE, Plot_Two}
+ggplot(aes(x=density,y=fixed.acidity),data=redwine)+
+  geom_point(aes(color=log10(citric.acid)), alpha=0.8) +
+  scale_colour_gradient(name = "Ácido Cítrico",
+                      low = "red", high = "darkred")+
+  ggtitle("Acidez Fixa - Densidade - Acido Cítrico")+
+  xlab('Densidade (g/cm^3)')+
+  ylab('Acidez Fixa (g/dm^3)') +
+  geom_smooth(method='lm', se = FALSE,size=0.6)
+```
+
+### Descrição 
+Quanto maior a densidade do vinho, maior é a sua ácidez. Existe uma correlação maior entre os ácidos (ácido fixo e o ácido cítrico). Ácido cítrico existe em apenas pequenas quantidades no vinho. É possível perceber que quanto menor a densidade e a acidez fixa, menor também será a ácidez cítrica o que torna o vinho com menos frescor e sabor.
+
+### Gráfico 2
+```{r echo=FALSE, plot-1}
+ggplot(aes(x = quality), data = redwine) +
+  geom_bar(fill="#AEC7E8", stat='count') +
+  labs(x='Qualidade do Vinho', y='Count') +
+  ggtitle("Distribuição da Qualidade")
+```
+
+### Descrição
+Não poderia faltar o gráfico que mostra a distribuição da qualidade de vinhos que por sinal é uma distribuição normal. É de se esperar, que como quase tudo nesta vida, tenhamos uma maior quantidade de vinhos medianos que não são nem muito bons nem muito ruins e alguns poucos vinhos se destacando mas nenhum atingindo a qualidade máxima.
+
+### Gráfico 3
+```{r echo=FALSE, multivariate_Plots-Plot23}
+ggplot(aes(x=alcohol,y=density, color=factor(quality)),data=redwine)+
+  geom_point(alpha=0.6) +
+  ggtitle("Álcool X Densidate X Qualidade")+
+  xlab('Álcool (%)')+
+  ylab('Densidade (g/cm^3)')+
+  geom_smooth(method = "lm", se = FALSE,size=0.8)  +
+  scale_color_brewer(type='seq',
+                   guide=guide_legend(title='Qualidade'))
+```
+
+### Descrição
+Quanto mais densidade de água, menor a quantidade de álcool o que corresponde á um vinho de menor qualidade. Temos um ou outro outlier, o que prova que toda regra tem sua exceção, mas em geral a densidade X álcool afeta a qualidade do vinho.
+Neste gráfico conseguimos ver as regressões lineares para cada qualidade e podemos notar que para qualidades menores a linha é menos íngreme e para qualidade maiores a linha tende mais à direita e é um pouco mais íngreme.
+Vinhos mais fracos possuem uma grande densidade de água e pouco álcool. O inverso acontece com vinhos de maior qualidade.
+
+------
+
+# Reflexão Final
+
+Este dataset se mostrou complicado de se trabalhar porque ele possui muitos vinhos categorizados com qualidade entre 4 e 6, estando sua grande maior na média como mostrou o gráfico de qualidade de vinho com sua distribuição normal. Poderíamos ter extraído ou entendido melhor algumas informações se tivéssemos mais vinhos categorizados como muito ruins ou muito bons. 
+
+Ao explorar o dataset as relações que se mostraram mais interessantes foram entre a densidade e o álcool, a densidade, álcool e ácidez e a ácidez fixa, cítrica e densidade. 
+Já sabia por algumas leituras que a ácidez cítrica influênciava no sabor do vinho, mas não imaginava que a quantidade de álcool X densidade seria tão importante para categorizar a qualidade de um vinho. 
+
+Foram explorados todas a variáveis, alguns com sumários e gráficos em box plot para entendermos melhor se havia e onde estavam os outliers e podemos perceber que a grande maioria das substancias seguem um enviesamento positivo o que significa que a grande maioria dos vinhos possui essas substancias em baixa quantidade.
+
+Posso concluir que estou satisfeito com o levantamento de informações e dizer que agora entendo um pouco mais sobre o que difere um vinho bom de um vinho ruim.
+
+
+## Referencias
+https://revistaadega.uol.com.br/artigo/o-alcool-e-acidez-dos-vinhos_6055.html
+https://s3.amazonaws.com/udacity-hosted-downloads/ud651/wineQualityInfo.txt
